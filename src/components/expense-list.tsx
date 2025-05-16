@@ -373,45 +373,28 @@ export function ExpenseList({ userId }: { userId: string }) {
       </div>
       {/* Category Progress Bars */}
       <div className="mb-8">
-        <h2 className="pixel-text text-lg text-[#ff4500] mb-2">
-          Budget Progress
-        </h2>
+        <h2 className="pixel-text text-lg text-[#ff4500] mb-2">Budget Progress</h2>
         <ul className="space-y-4">
-          {categories.map((cat) => {
-            const spent = expenses
-              .filter((e) => e.category_id === cat.id)
-              .reduce((sum, e) => sum + e.amount, 0);
-            const percent =
-              cat.budget > 0 ? Math.min((spent / cat.budget) * 100, 100) : 0;
+          {categories.map(cat => {
+            const spent = expenses.filter(e => e.category_id === cat.id).reduce((sum, e) => sum + e.amount, 0);
+            const percent = cat.budget > 0 ? Math.min((spent / cat.budget) * 100, 100) : 0;
             const over = spent > cat.budget;
             return (
               <li key={cat.id}>
                 <div className="flex justify-between items-center mb-1">
                   <span className="pixel-text font-bold">{cat.name}</span>
                   <span className="pixel-text text-sm">
-                    {currencyObj.symbol}
-                    {spent.toFixed(2)} / {currencyObj.symbol}
-                    {cat.budget}
+                    {currencyObj.symbol}{spent.toFixed(2)} / {currencyObj.symbol}{cat.budget}
                   </span>
                 </div>
                 <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
                   <div
-                    className={`h-4 transition-all duration-500 ${
-                      over ? "bg-red-500" : "bg-[#ff4500]"
-                    } `}
-                    style={{
-                      width: `${
-                        cat.budget > 0
-                          ? Math.min((spent / cat.budget) * 100, 100)
-                          : 0
-                      }%`,
-                    }}
+                    className={`h-4 transition-all duration-500 ${over ? 'bg-red-500' : 'bg-[#ff4500]'}`}
+                    style={{ width: `${cat.budget > 0 ? Math.min((spent / cat.budget) * 100, 100) : 0}%` }}
                   />
                 </div>
                 {over && (
-                  <div className="pixel-text text-red-500 text-xs mt-1">
-                    ⚠ Over budget!
-                  </div>
+                  <div className="pixel-text text-red-500 text-xs mt-1">⚠ Over budget!</div>
                 )}
               </li>
             );
