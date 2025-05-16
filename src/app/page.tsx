@@ -5,22 +5,23 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ExpenseList } from "@/components/expense-list";
 
+interface User {
+  id: string;
+  user_metadata?: { full_name?: string };
+}
+
 export default function Home() {
-  const [user, setUser] = useState<null | {
-    id: string;
-    user_metadata?: { full_name?: string };
-  }>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
   const router = useRouter();
 
   useEffect(() => {
-    
     const getUser = async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      setUser(user);
+      setUser(user as User | null);
       setLoading(false);
     };
     getUser();
@@ -32,7 +33,14 @@ export default function Home() {
     }
   }, [loading, user, router]);
 
-  if (loading || !user) {
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <span className="pixel-text text-2xl text-[#ff4500]">Loading...</span>
+      </div>
+    );
+  }
+  if (!user) {
     return null;
   }
 

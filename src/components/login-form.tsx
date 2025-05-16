@@ -51,8 +51,9 @@ export function LoginForm({
         return;
       }
 
-      router.push("/");
-      router.refresh();
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 500);
     } catch {
       setError("An unexpected error occurred");
     } finally {

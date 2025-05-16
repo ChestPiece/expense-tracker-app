@@ -38,24 +38,25 @@ export function ExpenseList({ userId }: { userId: string }) {
   }, [userId]);
 
   useEffect(() => {
-    // Load currency from localStorage if available
-    const stored = localStorage.getItem("expense_currency");
-    if (stored) setCurrency(stored);
-    async function fetchCurrencies() {
+    async function fetchCurrenciesAndPreference() {
       setCurrencyLoading(true);
-      const { data, error } = await supabase
+      const { data: currenciesData, error: currenciesError } = await supabase
         .from("currencies")
         .select("code, symbol, name");
-      if (!error && data) setCurrencies(data as Currency[]);
+      if (!currenciesError && currenciesData)
+        setCurrencies(currenciesData as Currency[]);
+      // Fetch user preference
+      const { data: prefData } = await supabase
+        .from("user_preferences")
+        .select("currency_code")
+        .eq("user_id", userId)
+        .single();
+      if (prefData && prefData.currency_code)
+        setCurrency(prefData.currency_code);
       setCurrencyLoading(false);
     }
-    fetchCurrencies();
-  }, []);
-
-  useEffect(() => {
-    // Persist currency selection
-    localStorage.setItem("expense_currency", currency);
-  }, [currency]);
+    fetchCurrenciesAndPreference();
+  }, [userId]);
 
   async function fetchExpenses() {
     setLoading(true);
@@ -110,6 +111,16 @@ export function ExpenseList({ userId }: { userId: string }) {
     fetchExpenses();
   }
 
+  async function handleCurrencyChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const newCurrency = e.target.value;
+    setCurrency(newCurrency);
+    // Update user preference in DB
+    await supabase.from("user_preferences").upsert({
+      user_id: userId,
+      currency_code: newCurrency,
+    });
+  }
+
   const currencyObj = currencies.find((c) => c.code === currency) || {
     code: "USD",
     symbol: "$",
@@ -134,7 +145,7 @@ export function ExpenseList({ userId }: { userId: string }) {
             id="currency"
             className="border rounded px-2 py-1 pixel-text text-[#ff4500] bg-white"
             value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
+            onChange={handleCurrencyChange}
           >
             {currencies.map((c) => (
               <option
