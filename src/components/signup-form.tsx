@@ -89,7 +89,7 @@ export function SignUpForm({
       setLoading(false);
       return (
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Check your email</h2>
+          <h2 className="text-lg font-bold mb-4">Check your email</h2>
           <p className="text-muted-foreground mb-4">
             We&apos;ve sent you a confirmation email. Please check your inbox
             and click the confirmation link to complete your registration.
@@ -203,16 +203,16 @@ export function SignUpForm({
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <div className="welcome-message text-center mb-8">
-        <h1 className="pixel-text text-3xl mb-2 text-[#ff4500]">
+        <h1 className="pixel-text text-xl mb-2 text-[#ff4500]">
           Welcome to Expense Tracker
         </h1>
         <p className="text-lg text-muted-foreground">
           Sign up to see the real action
         </p>
       </div>
-      <Card className="cyber-card bg-white dark:bg-zinc-900 border rounded-xl">
+      <Card className="cyber-card">
         <CardHeader>
-          <CardTitle className="pixel-text text-2xl text-[#ff4500]">
+          <CardTitle className="pixel-text text-lg text-[#ff4500]">
             Create an account
           </CardTitle>
           <CardDescription className="text-muted-foreground">

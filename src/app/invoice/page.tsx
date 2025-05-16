@@ -73,7 +73,7 @@ function InvoicePageContent() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-muted py-12">
       <Card className="w-full max-w-2xl shadow-2xl border rounded-2xl bg-white dark:bg-zinc-900">
         <CardHeader className="bg-muted rounded-t-2xl border-b">
-          <CardTitle className="pixel-text text-3xl text-[#ff4500] text-center tracking-tight py-2">
+          <CardTitle className="pixel-text text-xl text-[#ff4500] text-center tracking-tight py-2">
             Expense Invoice
           </CardTitle>
         </CardHeader>
@@ -117,7 +117,7 @@ function InvoicePageContent() {
                 </TableBody>
               </Table>
               <div className="flex justify-end mt-8">
-                <div className="pixel-text text-2xl font-extrabold text-[#ff4500]">
+                <div className="pixel-text text-lg font-extrabold text-[#ff4500]">
                   Total: {currency.symbol}
                   {total.toFixed(2)} {currency.code}
                 </div>

@@ -144,7 +144,7 @@ export function LoginForm({
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <div className="welcome-message text-center mb-8">
-        <h1 className="pixel-text text-3xl mb-2 text-[#ff4500]">
+        <h1 className="pixel-text text-xl mb-2 text-[#ff4500]">
           Welcome to Expense Tracker
         </h1>
         <p className="text-lg text-muted-foreground">
@@ -153,7 +153,7 @@ export function LoginForm({
       </div>
       <Card className="cyber-card">
         <CardHeader>
-          <CardTitle className="pixel-text text-2xl text-[#ff4500]">
+          <CardTitle className="pixel-text text-lg text-[#ff4500]">
             Login to your account
           </CardTitle>
           <CardDescription className="text-muted-foreground">
@@ -230,12 +230,14 @@ export function LoginForm({
                   {googleLoading ? (
                     <div className="flex items-center gap-2">
                       <LoadingSpinner />
-                      <span>Connecting to Google...</span>
+                      <span className="pixel-text">
+                        Connecting to Google...
+                      </span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
                       <GoogleIcon />
-                      <span>Login with Google</span>
+                      <span className="pixel-text">Login with Google</span>
                     </div>
                   )}
                 </Button>
@@ -249,12 +251,14 @@ export function LoginForm({
                   {githubLoading ? (
                     <div className="flex items-center gap-2">
                       <LoadingSpinner />
-                      <span>Connecting to GitHub...</span>
+                      <span className="pixel-text">
+                        Connecting to GitHub...
+                      </span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
                       <GithubIcon />
-                      <span>Login with GitHub</span>
+                      <span className="pixel-text">Login with GitHub</span>
                     </div>
                   )}
                 </Button>

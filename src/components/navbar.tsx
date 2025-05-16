@@ -49,7 +49,7 @@ export function Navbar() {
       <nav className="border-b bg-white dark:bg-zinc-900">
         <div className="flex h-16 items-center px-4 container mx-auto">
           <div className="flex items-center gap-4">
-            <h1 className="text-xl pixel-text text-[#ff4500]">
+            <h1 className="text-base pixel-text text-[#ff4500]">
               Expense Tracker
             </h1>
           </div>

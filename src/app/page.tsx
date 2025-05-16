@@ -36,7 +36,7 @@ export default function Home() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <span className="pixel-text text-2xl text-[#ff4500]">Loading...</span>
+        <span className="pixel-text text-lg text-[#ff4500]">Loading...</span>
       </div>
     );
   }
@@ -49,11 +49,11 @@ export default function Home() {
       <Navbar />
       <main className="flex-1">
         <div className="container mx-auto px-4 py-16">
-          <div className="max-w-2xl mx-auto text-center mt-12 mb-8">
-            <h1 className="text-3xl font-bold mb-4">
+          <div className="max-w-2xl mx-auto text-center mt-12 mb-8 neon-border py-6 px-2 bg-transparent">
+            <h1 className="pixel-text glitch text-xl mb-4 text-[#ff4500] drop-shadow-lg">
               Welcome to the Expense Tracker App!
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-base">
               Start tracking your expenses and managing your finances
               efficiently.
             </p>

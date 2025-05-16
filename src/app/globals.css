@@ -151,9 +151,7 @@
 /* Neon Border Effect */
 .neon-border {
   position: relative;
-  border: 2px solid transparent;
-  background: linear-gradient(45deg, #ff4500, #ff0000);
-  background-clip: padding-box;
+  border: 2px solid #ff4500;
   box-shadow: 0 0 10px rgba(255, 69, 0, 0.5);
 }
 
