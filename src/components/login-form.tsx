@@ -11,7 +11,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LoadingSpinner } from "./loading-spinner";
 import { GoogleIcon, GithubIcon } from "./social-icons";
@@ -26,7 +25,6 @@ export function LoginForm({
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [githubLoading, setGithubLoading] = useState(false);
-  const router = useRouter();
   const supabase = createClient();
 
   const handleLogin = async (e: React.FormEvent) => {

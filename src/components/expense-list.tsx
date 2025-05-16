@@ -35,7 +35,7 @@ export function ExpenseList({ userId }: { userId: string }) {
   useEffect(() => {
     fetchExpenses();
     // eslint-disable-next-line
-  }, [userId]);
+  }, [userId, supabase]);
 
   useEffect(() => {
     async function fetchCurrenciesAndPreference() {
@@ -56,7 +56,7 @@ export function ExpenseList({ userId }: { userId: string }) {
       setCurrencyLoading(false);
     }
     fetchCurrenciesAndPreference();
-  }, [userId]);
+  }, [userId, supabase]);
 
   async function fetchExpenses() {
     setLoading(true);
