@@ -1,11 +1,12 @@
-import { LoginForm } from "@/components/login-form"
+export const dynamic = "force-dynamic";
+import { Navbar } from "@/components/navbar";
+import { LoginForm } from "./LoginForm";
 
-export default function Page() {
+export default function LoginPage() {
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        <LoginForm />
-      </div>
+    <div className="min-h-screen bg-black text-white">
+      <Navbar />
+      <LoginForm />
     </div>
-  )
+  );
 }

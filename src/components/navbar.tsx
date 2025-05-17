@@ -4,9 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
 import { ConfirmDialog } from "./confirm-dialog";
-import { useTheme } from "next-themes";
-import { Sun, Moon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
 
 export function Navbar() {
@@ -15,7 +13,6 @@ export function Navbar() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const router = useRouter();
   const supabase = createClient();
-  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const getUser = async () => {
@@ -40,68 +37,54 @@ export function Navbar() {
   const handleSignOut = async () => {
     setShowLogoutConfirm(false);
     await supabase.auth.signOut();
-    router.push("/login");
+    router.push("/");
     router.refresh();
   };
 
   return (
     <>
-      <nav className="border-b bg-white dark:bg-zinc-900">
-        <div className="flex h-16 items-center px-4 container mx-auto">
-          <div className="flex items-center gap-4">
-            <h1 className="text-base pixel-text text-[#ff4500]">
-              Expense Tracker
-            </h1>
-          </div>
-          <div className="ml-auto flex items-center gap-4">
-            <button
-              className={cn(
-                "rounded-full p-2 hover:bg-muted transition-colors",
-                "focus:outline-none focus:ring-2 focus:ring-[#ff4500]"
-              )}
-              aria-label="Toggle theme"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            >
-              {theme === "dark" ? (
-                <Sun className="w-5 h-5 text-[#ff4500]" />
+      <nav className="bg-black/90 backdrop-blur-sm border-b border-[#ff4500]/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
+              <Link href="/" className="flex items-center">
+                <span className="pixel-text text-[#ff4500] text-xl font-bold">
+                  EXPENSE<span className="text-white">TRACKER</span>
+                </span>
+              </Link>
+            </div>
+            <div className="flex items-center gap-4">
+              {loading ? null : user ? (
+                <>
+                  <span className="pixel-text text-[#ff4500] text-base">
+                    Welcome, {user.user_metadata?.full_name || user.email}
+                  </span>
+                  <Button
+                    variant="outline"
+                    className="cyber-button pixel-text"
+                    onClick={() => setShowLogoutConfirm(true)}
+                  >
+                    Logout
+                  </Button>
+                </>
               ) : (
-                <Moon className="w-5 h-5 text-[#ff4500]" />
+                <>
+                  <Button
+                    variant="outline"
+                    className="cyber-button pixel-text"
+                    onClick={() => router.push("/login")}
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    className="cyber-button pixel-text"
+                    onClick={() => router.push("/signup")}
+                  >
+                    Sign Up
+                  </Button>
+                </>
               )}
-            </button>
-            {!loading && (
-              <>
-                {user ? (
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm pixel-text text-[#ff4500]">
-                      Welcome, {user.user_metadata?.full_name || user.email}
-                    </span>
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowLogoutConfirm(true)}
-                      className="cyber-button pixel-text"
-                    >
-                      Sign Out
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-4">
-                    <Button
-                      variant="outline"
-                      onClick={() => router.push("/login")}
-                      className="cyber-button pixel-text"
-                    >
-                      Login
-                    </Button>
-                    <Button
-                      onClick={() => router.push("/signup")}
-                      className="cyber-button pixel-text"
-                    >
-                      Sign Up
-                    </Button>
-                  </div>
-                )}
-              </>
-            )}
+            </div>
           </div>
         </div>
       </nav>

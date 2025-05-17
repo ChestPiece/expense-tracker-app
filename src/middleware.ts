@@ -33,23 +33,30 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // If user is not signed in and the current path is not /login or /signup
+  // If user is not signed in and the current path is not /login, /signup, or /auth
   // redirect the user to /login
-  if (!user && !["/", "/login", "/signup"].includes(request.nextUrl.pathname)) {
+  if (
+    !user &&
+    request.nextUrl.pathname !== "/" &&
+    !request.nextUrl.pathname.startsWith("/login") &&
+    !request.nextUrl.pathname.startsWith("/signup") &&
+    !request.nextUrl.pathname.startsWith("/auth")
+  ) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // If user is signed in and the current path is /login or /signup
-  // redirect the user to /
+  // If user is signed in and the current path is /login, /signup, or /
+  // redirect the user to /dashboard
   if (
     user &&
-    (request.nextUrl.pathname.startsWith("/login") ||
+    (request.nextUrl.pathname === "/" ||
+      request.nextUrl.pathname.startsWith("/login") ||
       request.nextUrl.pathname.startsWith("/signup"))
   ) {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 
