@@ -79,7 +79,7 @@ export function SignUpForm({
             "This email is already registered. Please use login instead."
           );
         } else {
-          setError(signUpError.message);
+        setError(signUpError.message);
         }
         return;
       }

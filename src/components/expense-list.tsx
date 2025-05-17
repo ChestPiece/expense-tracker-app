@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
+import { format } from "date-fns";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 interface Currency {
   code: string;
@@ -31,15 +33,11 @@ export function ExpenseList({ userId }: { userId: string }) {
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [editAmount, setEditAmount] = useState("");
   const [currency, setCurrency] = useState<string>("USD");
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [currencyLoading, setCurrencyLoading] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryId, setCategoryId] = useState<string>("");
-  const [editCategoryId, setEditCategoryId] = useState<string>("");
   const [newCategory, setNewCategory] = useState("");
   const [newBudget, setNewBudget] = useState("");
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
@@ -47,6 +45,11 @@ export function ExpenseList({ userId }: { userId: string }) {
   );
   const [editCategoryName, setEditCategoryName] = useState("");
   const [editCategoryBudget, setEditCategoryBudget] = useState("");
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<"date" | "amount" | "category">("date");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const supabase = createClient();
   const router = useRouter();
 
@@ -116,36 +119,17 @@ export function ExpenseList({ userId }: { userId: string }) {
   }
 
   async function handleDelete(id: string) {
-    await supabase.from("expenses").delete().eq("id", id);
-    fetchExpenses();
+    setPendingDeleteId(id);
+    setConfirmOpen(true);
   }
 
-  async function handleEdit(id: string) {
-    setEditingId(id);
-    const expense = expenses.find((e) => e.id === id);
-    if (expense) {
-      setEditTitle(expense.title);
-      setEditAmount(expense.amount.toString());
-      setEditCategoryId(expense.category_id || "");
+  async function confirmDelete() {
+    if (pendingDeleteId) {
+      await supabase.from("expenses").delete().eq("id", pendingDeleteId);
+      setPendingDeleteId(null);
+      setConfirmOpen(false);
+      fetchExpenses();
     }
-  }
-
-  async function handleUpdate(e: React.FormEvent) {
-    e.preventDefault();
-    if (!editingId || !editTitle || !editAmount || !editCategoryId) return;
-    await supabase
-      .from("expenses")
-      .update({
-        title: editTitle,
-        amount: parseFloat(editAmount),
-        category_id: editCategoryId,
-      })
-      .eq("id", editingId);
-    setEditingId(null);
-    setEditTitle("");
-    setEditAmount("");
-    setEditCategoryId("");
-    fetchExpenses();
   }
 
   async function handleCurrencyChange(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -164,9 +148,39 @@ export function ExpenseList({ userId }: { userId: string }) {
     name: "US Dollar",
   };
 
+  // Filter and sort expenses
+  const filteredExpenses = expenses
+    .filter((e) => {
+      const cat = categories.find((c) => c.id === e.category_id)?.name || "";
+      return (
+        e.title.toLowerCase().includes(search.toLowerCase()) ||
+        cat.toLowerCase().includes(search.toLowerCase())
+      );
+    })
+    .sort((a, b) => {
+      if (sortBy === "date") {
+        return sortDir === "asc"
+          ? new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          : new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      } else if (sortBy === "amount") {
+        return sortDir === "asc" ? a.amount - b.amount : b.amount - a.amount;
+      } else {
+        // category
+        const catA = categories.find((c) => c.id === a.category_id)?.name || "";
+        const catB = categories.find((c) => c.id === b.category_id)?.name || "";
+        return sortDir === "asc"
+          ? catA.localeCompare(catB)
+          : catB.localeCompare(catA);
+      }
+    });
+
   return (
-    <div className="max-w-2xl mx-auto mt-12">
-      <div className="flex items-center gap-4 mb-6">
+    <div className="max-w-2xl mx-auto mt-16 mb-12">
+      <p className="pixel-text text-base text-muted-foreground mb-6 text-center">
+        Track your expenses, manage budgets, and see your spending progress in
+        one place.
+      </p>
+      <div className="flex items-center gap-4 mb-2">
         <label
           htmlFor="currency"
           className="pixel-text text-[#ff4500] font-bold"
@@ -180,7 +194,7 @@ export function ExpenseList({ userId }: { userId: string }) {
         ) : (
           <select
             id="currency"
-            className="border rounded px-2 py-1 pixel-text text-[#ff4500] bg-white"
+            className="border rounded px-2 py-1 pixel-text text-[#ff4500] bg-white max-w-xs w-48"
             value={currency}
             onChange={handleCurrencyChange}
           >
@@ -196,7 +210,10 @@ export function ExpenseList({ userId }: { userId: string }) {
           </select>
         )}
       </div>
-      <form onSubmit={handleAdd} className="flex gap-2 mb-6">
+      <p className="pixel-text text-xs text-muted-foreground mb-4">
+        Choose your preferred currency for all expenses and budgets.
+      </p>
+      <form onSubmit={handleAdd} className="flex gap-2 mb-2 flex-wrap">
         <Input
           placeholder="Expense title"
           value={title}
@@ -230,6 +247,43 @@ export function ExpenseList({ userId }: { userId: string }) {
           Add
         </Button>
       </form>
+      <p className="pixel-text text-xs text-muted-foreground mb-4">
+        Add a new expense to track your spending. Select a category to organize
+        your expenses.
+      </p>
+      {/* Search and Sort Bar */}
+      <div className="flex flex-col sm:flex-row gap-2 mb-4 items-center justify-between">
+        <Input
+          placeholder="Search expenses or categories..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pixel-text w-full sm:w-1/2"
+        />
+        <div className="flex gap-2 items-center">
+          <label className="pixel-text text-xs text-muted-foreground">
+            Sort by:
+          </label>
+          <select
+            value={sortBy}
+            onChange={(e) =>
+              setSortBy(e.target.value as "date" | "amount" | "category")
+            }
+            className="pixel-text border rounded px-2 py-1"
+          >
+            <option value="date">Date</option>
+            <option value="amount">Amount</option>
+            <option value="category">Category</option>
+          </select>
+          <button
+            type="button"
+            onClick={() => setSortDir(sortDir === "asc" ? "desc" : "asc")}
+            className="pixel-text border rounded px-2 py-1"
+            aria-label="Toggle sort direction"
+          >
+            {sortDir === "asc" ? "↑" : "↓"}
+          </button>
+        </div>
+      </div>
       {/* Category Management Section */}
       <div className="mb-8">
         <h2 className="pixel-text text-lg text-[#ff4500] mb-2">
@@ -416,6 +470,95 @@ export function ExpenseList({ userId }: { userId: string }) {
           })}
         </ul>
       </div>
+      {/* Expense List Table */}
+      <div className="mt-6">
+        <h2 className="pixel-text text-xl text-[#ff4500] font-bold mb-2">
+          Expenses
+        </h2>
+        <p className="pixel-text text-xs text-muted-foreground mb-2">
+          Below is a list of your expenses. You can search, sort, edit, or
+          delete any entry.
+        </p>
+        <div className="w-full max-w-2xl mx-auto rounded-2xl border border-[#ff4500]/20 bg-white/90 dark:bg-zinc-900/90 shadow-lg overflow-hidden mt-8">
+          <ConfirmDialog
+            open={confirmOpen}
+            onOpenChange={setConfirmOpen}
+            onConfirm={confirmDelete}
+            title="Delete Expense?"
+            description="Are you sure you want to delete this expense? This action cannot be undone."
+            confirmText="Delete"
+            cancelText="Cancel"
+          />
+          <table className="min-w-full">
+            <colgroup>
+              <col style={{ width: "20%" }} />
+              <col style={{ width: "22%" }} />
+              <col style={{ width: "18%" }} />
+              <col style={{ width: "20%" }} />
+              <col style={{ width: "20%" }} />
+            </colgroup>
+            <thead>
+              <tr className="bg-[#1a1a1a] dark:bg-[#2a2a2a] border-b border-[#ff4500]/30">
+                <th className="pixel-text text-left px-4 py-3 text-[#ff4500] whitespace-nowrap">
+                  Title
+                </th>
+                <th className="pixel-text text-left px-4 py-3 text-[#ff4500] whitespace-nowrap">
+                  Category
+                </th>
+                <th className="pixel-text text-right px-4 py-3 text-[#ff4500] whitespace-nowrap">
+                  Amount
+                </th>
+                <th className="pixel-text text-center px-4 py-3 text-[#ff4500] whitespace-nowrap">
+                  Date
+                </th>
+                <th className="pixel-text text-center px-4 py-3 text-[#ff4500] whitespace-nowrap">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredExpenses.map((expense, idx) => (
+                <tr
+                  key={expense.id}
+                  className={
+                    (idx % 2 === 0
+                      ? "bg-[#f5f5f5] dark:bg-[#ff4500]/[0.10]"
+                      : "") +
+                    " hover:bg-[#ff4500]/10 dark:hover:bg-[#ff4500]/30 transition-colors"
+                  }
+                >
+                  <td className="pixel-text px-4 py-3 whitespace-nowrap text-[#222] dark:text-inherit">
+                    {expense.title}
+                  </td>
+                  <td className="pixel-text px-4 py-3 whitespace-nowrap text-[#222] dark:text-inherit">
+                    {categories.find((c) => c.id === expense.category_id)
+                      ?.name || "-"}
+                  </td>
+                  <td className="pixel-text px-4 py-3 text-right text-[#ff4500] whitespace-nowrap">
+                    {currencyObj.symbol}
+                    {expense.amount.toFixed(2)} {currencyObj.code}
+                  </td>
+                  <td className="pixel-text px-4 py-3 text-center whitespace-nowrap">
+                    {format(new Date(expense.created_at), "MMM d, yyyy")}
+                  </td>
+                  <td className="pixel-text px-4 py-3 text-center whitespace-nowrap">
+                    <div className="flex gap-2 justify-center">
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDelete(expense.id)}
+                        className="cyber-button pixel-text"
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
       {loading ? (
         <div className="text-center text-muted-foreground pixel-text">
           Loading...
@@ -426,97 +569,11 @@ export function ExpenseList({ userId }: { userId: string }) {
         </div>
       ) : (
         <>
-          <ul className="space-y-4 mb-8">
-            {expenses.map((expense) => (
-              <li
-                key={expense.id}
-                className="flex items-center justify-between bg-white border rounded px-4 py-2 cyber-card"
-              >
-                {editingId === expense.id ? (
-                  <form onSubmit={handleUpdate} className="flex gap-2 flex-1">
-                    <Input
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      className="cyber-input pixel-text"
-                    />
-                    <Input
-                      type="number"
-                      min="0"
-                      value={editAmount}
-                      onChange={(e) => setEditAmount(e.target.value)}
-                      className="cyber-input pixel-text"
-                    />
-                    <select
-                      value={editCategoryId}
-                      onChange={(e) => setEditCategoryId(e.target.value)}
-                      className="border rounded px-2 py-1 pixel-text text-[#ff4500] bg-white"
-                      required
-                    >
-                      <option value="" disabled>
-                        Select category
-                      </option>
-                      {categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </option>
-                      ))}
-                    </select>
-                    <Button
-                      type="submit"
-                      size="sm"
-                      className="cyber-button pixel-text"
-                    >
-                      Save
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setEditingId(null)}
-                      className="cyber-button pixel-text"
-                    >
-                      Cancel
-                    </Button>
-                  </form>
-                ) : (
-                  <>
-                    <div className="flex-1">
-                      <div className="pixel-text font-bold text-lg text-[#ff4500]">
-                        {expense.title}
-                      </div>
-                      <div className="text-muted-foreground text-sm pixel-text">
-                        {currencyObj.symbol}
-                        {expense.amount.toFixed(2)} {currencyObj.code}
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEdit(expense.id)}
-                        className="cyber-button pixel-text"
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDelete(expense.id)}
-                        className="cyber-button pixel-text"
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </li>
-            ))}
-          </ul>
-          <div className="flex justify-center">
+          <div className="flex justify-center mt-8">
             <Button
               variant="default"
               onClick={() => router.push(`/invoice?currency=${currency}`)}
-              className="cyber-button pixel-text"
+              className="cyber-button pixel-text px-6 py-2 text-base sm:text-lg rounded-xl border-2 border-[#ff4500] hover:bg-[#ff4500]/10 transition-all"
             >
               Check your total expense
             </Button>

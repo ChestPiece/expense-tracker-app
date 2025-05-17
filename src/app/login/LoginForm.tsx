@@ -74,9 +74,9 @@ export function LoginForm() {
   };
 
   return (
-    <main className="max-w-md mx-auto px-4 py-16">
-      <div className="cyber-card p-8">
-        <h1 className="pixel-text text-2xl text-[#ff4500] font-bold mb-6 text-center">
+    <main className="max-w-md mx-auto px-4 py-8 sm:py-16">
+      <div className="cyber-card p-4 sm:p-8">
+        <h1 className="pixel-text text-xl sm:text-2xl text-[#ff4500] font-bold mb-4 sm:mb-6 text-center">
           LOGIN
         </h1>
         {message && (
@@ -144,7 +144,7 @@ export function LoginForm() {
               </Button>
             </form>
 
-            <div className="relative my-6">
+            <div className="relative my-4 sm:my-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-700"></div>
               </div>
@@ -155,7 +155,7 @@ export function LoginForm() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Button
                 type="button"
                 variant="outline"

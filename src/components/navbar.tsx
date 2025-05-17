@@ -1,18 +1,20 @@
 "use client";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { Button } from "./ui/button";
-import { useEffect, useState } from "react";
-import { ConfirmDialog } from "./confirm-dialog";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Menu, X } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
+import { useTheme } from "next-themes";
+import { Sun, Moon } from "lucide-react";
 
 export function Navbar() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+  const [user, setUser] = useState<User | null>(null);
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const getUser = async () => {
@@ -20,82 +22,160 @@ export function Navbar() {
         data: { user },
       } = await supabase.auth.getUser();
       setUser(user);
-      setLoading(false);
     };
-
     getUser();
+  }, [supabase]);
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabase.auth]);
-
-  const handleSignOut = async () => {
-    setShowLogoutConfirm(false);
+  const handleLogout = async () => {
     await supabase.auth.signOut();
+    setUser(null);
     router.push("/");
-    router.refresh();
   };
 
   return (
-    <>
-      <nav className="bg-black/90 backdrop-blur-sm border-b border-[#ff4500]/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center">
-                <span className="pixel-text text-[#ff4500] text-xl font-bold">
-                  EXPENSE<span className="text-white">TRACKER</span>
+    <nav className="bg-black border-b border-gray-800">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <Link
+              href="/"
+              className="pixel-text text-[#ff4500] text-xl font-bold"
+            >
+              EXPENSE TRACKER
+            </Link>
+          </div>
+          <div className="hidden sm:flex sm:items-center sm:space-x-4">
+            <Link
+              href="/dashboard"
+              className="pixel-text text-gray-300 hover:text-[#ff4500]"
+            >
+              Dashboard
+            </Link>
+            {user ? (
+              <>
+                <span className="pixel-text text-gray-300">
+                  {user.user_metadata?.full_name || user.email}
                 </span>
-              </Link>
-            </div>
-            <div className="flex items-center gap-4">
-              {loading ? null : user ? (
-                <>
-                  <span className="pixel-text text-[#ff4500] text-base">
-                    Welcome, {user.user_metadata?.full_name || user.email}
-                  </span>
-                  <Button
-                    variant="outline"
-                    className="cyber-button pixel-text"
-                    onClick={() => setShowLogoutConfirm(true)}
-                  >
-                    Logout
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    variant="outline"
-                    className="cyber-button pixel-text"
-                    onClick={() => router.push("/login")}
-                  >
-                    Login
-                  </Button>
-                  <Button
-                    className="cyber-button pixel-text"
-                    onClick={() => router.push("/signup")}
-                  >
-                    Sign Up
-                  </Button>
-                </>
-              )}
-            </div>
+                <button
+                  aria-label="Toggle Dark Mode"
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="ml-2 p-2 rounded-full hover:bg-gray-800 transition-colors"
+                >
+                  {theme === "dark" ? (
+                    <Sun size={18} className="text-yellow-400" />
+                  ) : (
+                    <Moon size={18} className="text-gray-400" />
+                  )}
+                </button>
+                <Button
+                  variant="outline"
+                  className="cyber-button pixel-text"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="pixel-text text-gray-300 hover:text-[#ff4500]"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/signup"
+                  className="pixel-text text-gray-300 hover:text-[#ff4500]"
+                >
+                  Sign Up
+                </Link>
+                <button
+                  aria-label="Toggle Dark Mode"
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="ml-2 p-2 rounded-full hover:bg-gray-800 transition-colors"
+                >
+                  {theme === "dark" ? (
+                    <Sun size={18} className="text-yellow-400" />
+                  ) : (
+                    <Moon size={18} className="text-gray-400" />
+                  )}
+                </button>
+              </>
+            )}
+          </div>
+          <div className="sm:hidden flex items-center">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="text-gray-300 hover:text-[#ff4500]"
+            >
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
           </div>
         </div>
-      </nav>
-      <ConfirmDialog
-        open={showLogoutConfirm}
-        onOpenChange={setShowLogoutConfirm}
-        onConfirm={handleSignOut}
-        title="Confirm Logout"
-        description="Are you sure you want to log out of your account?"
-        confirmText="Logout"
-      />
-    </>
+      </div>
+      {isMenuOpen && (
+        <div className="sm:hidden">
+          <div className="px-2 pt-2 pb-3 space-y-1">
+            <Link
+              href="/dashboard"
+              className="block pixel-text text-gray-300 hover:text-[#ff4500] py-2"
+            >
+              Dashboard
+            </Link>
+            {user ? (
+              <>
+                <span className="block pixel-text text-gray-300 py-2">
+                  {user.user_metadata?.full_name || user.email}
+                </span>
+                <button
+                  aria-label="Toggle Dark Mode"
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="my-2 p-2 rounded-full hover:bg-gray-800 transition-colors w-full flex justify-center"
+                >
+                  {theme === "dark" ? (
+                    <Sun size={18} className="text-yellow-400" />
+                  ) : (
+                    <Moon size={18} className="text-gray-400" />
+                  )}
+                </button>
+                <Button
+                  variant="outline"
+                  className="cyber-button pixel-text w-full"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="block pixel-text text-gray-300 hover:text-[#ff4500] py-2"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/signup"
+                  className="block pixel-text text-gray-300 hover:text-[#ff4500] py-2"
+                >
+                  Sign Up
+                </Link>
+                <button
+                  aria-label="Toggle Dark Mode"
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="my-2 p-2 rounded-full hover:bg-gray-800 transition-colors w-full flex justify-center"
+                >
+                  {theme === "dark" ? (
+                    <Sun size={18} className="text-yellow-400" />
+                  ) : (
+                    <Moon size={18} className="text-gray-400" />
+                  )}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </nav>
   );
 }

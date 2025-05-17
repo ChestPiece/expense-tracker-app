@@ -226,7 +226,7 @@ export default function SignUpPage() {
               Login
             </Link>
           </div>
-        </div>
+      </div>
       </main>
     </div>
   );
